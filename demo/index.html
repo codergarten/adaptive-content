@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>adaptive-content demo (serve over http)</title>
+<style>
+:root{--bg:#faf8f4;--card:#fff;--ink:#1d2433;--mut:#6b7385;--line:#e3ded3;--acc:#2f6fed;--accbg:#e8f0ff;
+box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#14171d;--card:#1d222b;--ink:#e8ebf2;--mut:#98a1b3;--line:#2d3440;--acc:#7aa5ff;--accbg:#1f2c47}}
+:root[data-theme="dark"]{--bg:#14171d;--card:#1d222b;--ink:#e8ebf2;--mut:#98a1b3;--line:#2d3440;--acc:#7aa5ff;--accbg:#1f2c47}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.55 system-ui,-apple-system,"Segoe UI",sans-serif}
+header{max-width:1100px;margin:0 auto;padding:28px 20px 8px}
+h1{margin:0 0 6px;font-size:26px}
+header p{margin:0;color:var(--mut);max-width:70ch}
+code{font:13px ui-monospace,Menlo,monospace;background:var(--accbg);padding:1px 5px;border-radius:6px}
+main{max-width:1100px;margin:0 auto;padding:16px 20px 40px;display:grid;grid-template-columns:1fr 1fr;gap:20px}
+@media (max-width:760px){main{grid-template-columns:1fr}}
+h2{font-size:13px;text-transform:uppercase;letter-spacing:.08em;color:var(--mut);margin:0 0 10px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:6px;padding:12px 14px;margin-bottom:10px;transition:.2s}
+.card.on{border-color:var(--acc);box-shadow:0 0 0 2px var(--accbg)}
+.tag{display:flex;justify-content:space-between;font-size:12px;color:var(--mut);margin-bottom:4px}
+.card.on .tag{color:var(--acc);font-weight:600}
+.card p{margin:0;font-size:14px}
+.stage{background:repeating-linear-gradient(45deg,transparent 0 10px,var(--accbg) 10px 11px);border:1px dashed var(--line);border-radius:6px;padding:14px;overflow-x:auto}
+#box{background:var(--card);border:1px solid var(--acc);border-radius:6px;padding:14px;max-width:100%}
+adaptive-content{display:block}
+#box p{margin:0}
+.ctl{display:flex;gap:12px;align-items:center;margin:0 0 12px;font-size:14px}
+.ctl input{flex:1;accent-color:var(--acc)}
+.read{font-size:13px;color:var(--mut);margin-top:10px}
+pre{background:var(--card);border:1px solid var(--line);border-radius:6px;padding:12px;overflow-x:auto;font:12.5px/1.5 ui-monospace,Menlo,monospace;margin:12px 0 0}
+</style>
+</head>
+<body>
+<header>
+<h1>adaptive-content</h1>
+<p>Write several versions of the same idea. The one that fits the space available is the only one shown. Drag the slider, or resize your window if you use <code>basis="viewport"</code>.</p>
+</header>
+<main>
+<section>
+<h2>Source: four written variants</h2>
+<div id="cards"></div>
+</section>
+<section>
+<h2>Result: what the reader sees</h2>
+<div class="ctl"><label for="w">Width</label><input id="w" type="range" min="160" max="640" value="420"><span id="wv">420px</span></div>
+<div class="stage">
+<div id="box" style="width:420px">
+<adaptive-content id="ac">
+<p data-name="Tiny" data-min="0">Plants turn light into food.</p>
+<p data-name="Short" data-min="240">Photosynthesis lets plants use sunlight, water and carbon dioxide to make sugar for energy, releasing oxygen as a by-product.</p>
+<p data-name="Medium" data-min="360">Photosynthesis happens in chloroplasts. Chlorophyll absorbs sunlight and uses its energy to turn water and carbon dioxide into glucose, which feeds the plant. Oxygen is released through tiny pores called stomata. Almost all life on Earth depends on this process.</p>
+<p data-name="Long" data-min="520">Photosynthesis happens in two linked stages inside chloroplasts. In the light-dependent stage, chlorophyll absorbs sunlight and splits water, releasing oxygen and storing energy in ATP and NADPH. In the Calvin cycle that follows, that stored energy is used to fix carbon dioxide into glucose. The plant uses the sugar to grow, or stores it as starch. Almost every food chain begins here, and it is also why plants are vital to the oxygen in our air.</p>
+</adaptive-content>
+</div>
+</div>
+<div class="read" id="read"></div>
+<pre>&lt;adaptive-content&gt;
+  &lt;p data-min="0"&gt;Plants turn light into food.&lt;/p&gt;
+  &lt;p data-min="240"&gt;Short version…&lt;/p&gt;
+  &lt;p data-min="360"&gt;Medium version…&lt;/p&gt;
+&lt;/adaptive-content&gt;</pre>
+</section>
+</main>
+<script type="module">
+import "../index.js";
+// ---- demo wiring ----
+const ac = document.getElementById('ac'), cards = document.getElementById('cards');
+const cardEls = {};
+[...ac.children].forEach(p => {
+  const d = document.createElement('div');
+  d.className = 'card';
+  d.innerHTML = '<div class="tag"><span></span><span></span></div><p></p>';
+  d.children[0].children[0].textContent = p.dataset.name;
+  d.children[0].children[1].textContent = 'data-min=' + p.dataset.min + ' · ' + p.textContent.split(' ').length + ' words';
+  d.children[1].textContent = p.textContent;
+  cards.appendChild(d);
+  cardEls[p.dataset.name] = d;
+});
+ac.addEventListener('adaptive-change', e => {
+  Object.values(cardEls).forEach(c => c.classList.remove('on'));
+  if (cardEls[e.detail.variant]) cardEls[e.detail.variant].classList.add('on');
+  document.getElementById('read').textContent = 'Container is ' + e.detail.width + 'px wide, so “' + e.detail.variant + '” is shown.';
+});
+const w = document.getElementById('w');
+w.addEventListener('input', () => {
+  document.getElementById('box').style.width = w.value + 'px';
+  document.getElementById('wv').textContent = w.value + 'px';
+});
+ac.update();
+</script>
+</body>
+</html>

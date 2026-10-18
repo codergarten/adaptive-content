@@ -1,0 +1,54 @@
+{
+  "name": "@codergarten/adaptive-content",
+  "version": "0.1.0",
+  "description": "A tiny web component that shows only the one content variant that fits the available width. Write once, adapt everywhere.",
+  "type": "module",
+  "main": "index.js",
+  "module": "index.js",
+  "types": "index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./index.d.ts",
+      "default": "./index.js"
+    },
+    "./react": {
+      "types": "./react.d.ts",
+      "default": "./react.js"
+    }
+  },
+  "sideEffects": true,
+  "files": [
+    "index.js",
+    "index.d.ts",
+    "react.js",
+    "react.d.ts",
+    "README.md",
+    "LICENSE"
+  ],
+  "keywords": [
+    "web-component",
+    "responsive",
+    "adaptive",
+    "container-query",
+    "education",
+    "content"
+  ],
+  "license": "MIT",
+  "author": "Codergarten",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/codergarten/adaptive-content.git"
+  },
+  "homepage": "https://codergarten.github.io/adaptive-content/",
+  "publishConfig": {
+    "access": "public"
+  },
+  "peerDependencies": {
+    "react": ">=17"
+  },
+  "peerDependenciesMeta": {
+    "react": {
+      "optional": true
+    }
+  }
+}
