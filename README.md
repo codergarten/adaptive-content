@@ -1,8 +1,8 @@
-# @codergarten/adaptive-content
+# @codergartenau/adaptive-content
 
-[![npm version](https://img.shields.io/npm/v/@codergarten/adaptive-content.svg)](https://www.npmjs.com/package/@codergarten/adaptive-content)
+[![npm version](https://img.shields.io/npm/v/@codergartenau/adaptive-content.svg)](https://www.npmjs.com/package/@codergartenau/adaptive-content)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
-[![bundle size](https://img.shields.io/bundlephobia/minzip/@codergarten/adaptive-content)](https://bundlephobia.com/package/@codergarten/adaptive-content)
+[![bundle size](https://img.shields.io/bundlephobia/minzip/@codergartenau/adaptive-content)](https://bundlephobia.com/package/@codergartenau/adaptive-content)
 [![Live Demo](https://img.shields.io/badge/demo-live-success.svg)](https://codergarten.github.io/adaptive-content/)
 
 Write several versions of the same information. Only the one that fits the space available is shown.
@@ -22,17 +22,17 @@ Useful for education and editorial apps: a concept can be a one-liner on a phone
 ## Install
 
 ```bash
-npm install @codergarten/adaptive-content
+npm install @codergartenau/adaptive-content
 ```
 
 ```js
-import '@codergarten/adaptive-content';
+import '@codergartenau/adaptive-content';
 ```
 
 Or without a build step directly in the browser:
 
 ```html
-<script type="module" src="https://cdn.jsdelivr.net/npm/@codergarten/adaptive-content@0.1.0/index.js"></script>
+<script type="module" src="https://cdn.jsdelivr.net/npm/@codergartenau/adaptive-content@0.1.0/index.js"></script>
 ```
 
 ---
@@ -82,7 +82,7 @@ A dedicated React wrapper with `forwardRef` and full TypeScript typings is inclu
 
 ```jsx
 import { useRef } from 'react';
-import { AdaptiveContent } from '@codergarten/adaptive-content/react';
+import { AdaptiveContent } from '@codergartenau/adaptive-content/react';
 
 function Header() {
   const ref = useRef(null);
@@ -146,8 +146,8 @@ adaptive-content:not(:defined) > template {
 TypeScript declarations are bundled for both the web component and React wrapper:
 
 ```ts
-import type { AdaptiveContent, AdaptiveChangeDetail } from '@codergarten/adaptive-content';
-import type { AdaptiveContentProps } from '@codergarten/adaptive-content/react';
+import type { AdaptiveContent, AdaptiveChangeDetail } from '@codergartenau/adaptive-content';
+import type { AdaptiveContentProps } from '@codergartenau/adaptive-content/react';
 ```
 
 ---

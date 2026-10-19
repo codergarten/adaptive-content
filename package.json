@@ -1,5 +1,5 @@
 {
-  "name": "@codergarten/adaptive-content",
+  "name": "@codergartenau/adaptive-content",
   "version": "0.1.0",
   "description": "A tiny web component that shows only the one content variant that fits the available width. Write once, adapt everywhere.",
   "type": "module",
