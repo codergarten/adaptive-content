@@ -1,0 +1,29 @@
+# adaptive-content
+
+> One component, several variants. Only the variant that fits the width shows.
+
+## Install
+```bash
+npm install @codergartenau/adaptive-content
+```
+```js
+import '@codergartenau/adaptive-content';
+```
+
+## Use
+```html
+<adaptive-content>
+  <p data-name="tiny" data-min="0">Plants turn light into food.</p>
+  <p data-name="short" data-min="240">Plants use sunlight, water and CO2 to make sugar.</p>
+  <template data-name="long" data-min="520"><p>Full explanation…</p></template>
+</adaptive-content>
+```
+
+## API
+- Variant attrs: `data-min` (default 0), `data-max` (default Infinity), `data-name` (event label).
+- Host attr: `basis="container"` (default) | `"viewport"`.
+- Selection: largest `data-min` with `width >= min && width <= max`, else smallest `min`.
+- `template` variants clone once into `div[data-adaptive-rendered]` when first selected.
+- JS: `el.update()`, `el.current`, event `adaptive-change` → `detail {variant, width, element}`.
+- React: `import { AdaptiveContent } from '@codergartenau/adaptive-content/react'` with `basis`, `onChange(detail)`.
+- SSR: hide un-initialized variants with `adaptive-content:not(:defined) > :not(:first-child) { display: none }`.
