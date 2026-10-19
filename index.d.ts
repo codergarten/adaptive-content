@@ -7,8 +7,11 @@ export interface AdaptiveChangeDetail {
 }
 
 export class AdaptiveContent extends HTMLElement {
+  /** Selection basis: 'container' (default, uses element width) or 'viewport' (uses window.innerWidth). */
   basis: 'container' | 'viewport';
+  /** The currently selected variant element (or template element for lazily rendered variants). */
   readonly current: Element | null;
+  /** Force re-evaluation of which variant should be displayed. */
   update(): void;
   addEventListener(
     type: 'adaptive-change',

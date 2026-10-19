@@ -23,41 +23,94 @@ export class AdaptiveContent extends HTMLElement {
   get current() { return this._cur || null; }
 
   connectedCallback() {
+    if (!this.style.display && typeof getComputedStyle !== 'undefined' && getComputedStyle(this).display === 'inline') {
+      this.style.display = 'block';
+    }
+
     if (typeof ResizeObserver !== 'undefined') {
       this._ro = new ResizeObserver(() => this.update());
       this._ro.observe(this);
     }
+
+    if (typeof MutationObserver !== 'undefined') {
+      this._mo = new MutationObserver(records => {
+        const relevant = records.some(r => {
+          if (r.type === 'attributes') return true;
+          if (r.type === 'childList') {
+            for (const node of [...r.addedNodes, ...r.removedNodes]) {
+              if (node.nodeType === 1 && (node.hasAttribute('data-min') || node.hasAttribute('data-max'))) {
+                return true;
+              }
+            }
+          }
+          return false;
+        });
+        if (relevant) this.update();
+      });
+      this._mo.observe(this, {
+        childList: true,
+        subtree: false,
+        attributes: true,
+        attributeFilter: ['data-min', 'data-max', 'data-name'],
+      });
+    }
+
     this._on = () => this.update();
-    addEventListener('resize', this._on);
+    if (typeof window !== 'undefined') {
+      window.addEventListener('resize', this._on);
+    }
     this.update();
   }
 
   disconnectedCallback() {
     if (this._ro) this._ro.disconnect();
-    if (this._on) removeEventListener('resize', this._on);
+    if (this._mo) this._mo.disconnect();
+    if (this._on && typeof window !== 'undefined') {
+      window.removeEventListener('resize', this._on);
+    }
   }
 
   attributeChangedCallback() { if (this.isConnected) this.update(); }
 
   update() {
     const width = this.getAttribute('basis') === 'viewport'
-      ? innerWidth
+      ? (typeof window !== 'undefined' ? window.innerWidth : 0)
       : this.getBoundingClientRect().width;
 
-    const variants = [...this.children].filter(el => el.hasAttribute('data-min'));
+    const variants = [...this.children].filter(el => el.hasAttribute('data-min') || el.hasAttribute('data-max'));
     if (!variants.length) return;
 
-    const min = el => Number(el.getAttribute('data-min')) || 0;
+    const getMin = el => (el.hasAttribute('data-min') ? Number(el.getAttribute('data-min')) || 0 : 0);
+    const getMax = el => (el.hasAttribute('data-max') ? Number(el.getAttribute('data-max')) || Infinity : Infinity);
+
     let best = null;
     for (const v of variants) {
-      if (min(v) <= width && (!best || min(v) >= min(best))) best = v;
+      const min = getMin(v);
+      const max = getMax(v);
+      if (width >= min && width <= max) {
+        if (!best) {
+          best = v;
+        } else {
+          const bestMin = getMin(best);
+          if (min > bestMin) {
+            best = v;
+          } else if (min === bestMin && max < getMax(best)) {
+            best = v;
+          }
+        }
+      }
     }
-    // Container narrower than every variant: fall back to the smallest one.
-    if (!best) best = variants.reduce((a, b) => (min(b) < min(a) ? b : a));
+
+    // Container narrower than every variant or no range matched: fall back to the lowest min.
+    if (!best) best = variants.reduce((a, b) => (getMin(b) < getMin(a) ? b : a));
 
     for (const v of variants) {
       const el = v.tagName === 'TEMPLATE' ? this._render(v, v === best) : v;
-      if (el) el.hidden = v !== best;
+      if (el) {
+        const isShown = v === best;
+        el.hidden = !isShown;
+        el.style.display = isShown ? '' : 'none';
+      }
     }
 
     if (best !== this._cur) {

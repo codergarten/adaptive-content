@@ -5,10 +5,10 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>adaptive-content demo (serve over http)</title>
 <style>
-:root{--bg:#faf8f4;--card:#fff;--ink:#1d2433;--mut:#6b7385;--line:#e3ded3;--acc:#2f6fed;--accbg:#e8f0ff;
+:root{--bg:#faf8f4;--card:#fff;--ink:#1d2433;--mut:#6b7385;--line:#e3ded3;--acc:#2f6fed;--accbg:#e8f0ff;--badge:#107048;--badgebg:#e6f6ee;
 box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
-@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#14171d;--card:#1d222b;--ink:#e8ebf2;--mut:#98a1b3;--line:#2d3440;--acc:#7aa5ff;--accbg:#1f2c47}}
-:root[data-theme="dark"]{--bg:#14171d;--card:#1d222b;--ink:#e8ebf2;--mut:#98a1b3;--line:#2d3440;--acc:#7aa5ff;--accbg:#1f2c47}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#14171d;--card:#1d222b;--ink:#e8ebf2;--mut:#98a1b3;--line:#2d3440;--acc:#7aa5ff;--accbg:#1f2c47;--badge:#4cd494;--badgebg:#143324}}
+:root[data-theme="dark"]{--bg:#14171d;--card:#1d222b;--ink:#e8ebf2;--mut:#98a1b3;--line:#2d3440;--acc:#7aa5ff;--accbg:#1f2c47;--badge:#4cd494;--badgebg:#143324}
 html{scroll-padding-top:env(safe-area-inset-top,0px)}
 *{box-sizing:border-box}
 body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.55 system-ui,-apple-system,"Segoe UI",sans-serif}
@@ -24,12 +24,18 @@ h2{font-size:13px;text-transform:uppercase;letter-spacing:.08em;color:var(--mut)
 .tag{display:flex;justify-content:space-between;font-size:12px;color:var(--mut);margin-bottom:4px}
 .card.on .tag{color:var(--acc);font-weight:600}
 .card p{margin:0;font-size:14px}
+.badge{font-size:11px;font-weight:600;padding:2px 6px;border-radius:6px;background:var(--badgebg);color:var(--badge)}
 .stage{background:repeating-linear-gradient(45deg,transparent 0 10px,var(--accbg) 10px 11px);border:1px dashed var(--line);border-radius:6px;padding:14px;overflow-x:auto}
 #box{background:var(--card);border:1px solid var(--acc);border-radius:6px;padding:14px;max-width:100%}
 adaptive-content{display:block}
 #box p{margin:0}
-.ctl{display:flex;gap:12px;align-items:center;margin:0 0 12px;font-size:14px}
+.ctl{display:flex;gap:12px;align-items:center;margin:0 0 10px;font-size:14px}
 .ctl input{flex:1;accent-color:var(--acc)}
+.presets{display:flex;gap:8px;align-items:center;margin-bottom:14px;flex-wrap:wrap;font-size:13px}
+.presets button{background:var(--card);border:1px solid var(--line);border-radius:6px;padding:4px 10px;font-size:12px;color:var(--ink);cursor:pointer;transition:.15s}
+.presets button:hover{border-color:var(--acc);color:var(--acc)}
+.basis-row{display:flex;gap:16px;margin-bottom:14px;font-size:13px}
+.basis-row label{display:flex;gap:6px;align-items:center;cursor:pointer}
 .read{font-size:13px;color:var(--mut);margin-top:10px}
 pre{background:var(--card);border:1px solid var(--line);border-radius:6px;padding:12px;overflow-x:auto;font:12.5px/1.5 ui-monospace,Menlo,monospace;margin:12px 0 0}
 </style>
@@ -37,23 +43,36 @@ pre{background:var(--card);border:1px solid var(--line);border-radius:6px;paddin
 <body>
 <header>
 <h1>adaptive-content</h1>
-<p>Write several versions of the same idea. The one that fits the space available is the only one shown. Drag the slider, or resize your window if you use <code>basis="viewport"</code>.</p>
+<p>Write several versions of the same idea. The one that fits the space available is the only one shown. Drag the slider, click presets, or toggle <code>basis="viewport"</code>.</p>
 </header>
 <main>
 <section>
-<h2>Source: four written variants</h2>
+<h2>Source: written variants & lazy templates</h2>
 <div id="cards"></div>
 </section>
 <section>
 <h2>Result: what the reader sees</h2>
-<div class="ctl"><label for="w">Width</label><input id="w" type="range" min="160" max="640" value="420"><span id="wv">420px</span></div>
+<div class="basis-row">
+<label><input type="radio" name="basis-toggle" value="container" checked> Basis: container (width slider)</label>
+<label><input type="radio" name="basis-toggle" value="viewport"> Basis: viewport (window size)</label>
+</div>
+<div class="ctl" id="slider-row"><label for="w">Width</label><input id="w" type="range" min="160" max="640" value="420"><span id="wv">420px</span></div>
+<div class="presets" id="presets-row">
+<span>Presets:</span>
+<button type="button" data-w="200">Mobile (200px)</button>
+<button type="button" data-w="320">Compact (320px)</button>
+<button type="button" data-w="420">Medium (420px)</button>
+<button type="button" data-w="580">Desktop (580px)</button>
+</div>
 <div class="stage">
 <div id="box" style="width:420px">
 <adaptive-content id="ac">
 <p data-name="Tiny" data-min="0">Plants turn light into food.</p>
 <p data-name="Short" data-min="240">Photosynthesis lets plants use sunlight, water and carbon dioxide to make sugar for energy, releasing oxygen as a by-product.</p>
 <p data-name="Medium" data-min="360">Photosynthesis happens in chloroplasts. Chlorophyll absorbs sunlight and uses its energy to turn water and carbon dioxide into glucose, which feeds the plant. Oxygen is released through tiny pores called stomata. Almost all life on Earth depends on this process.</p>
-<p data-name="Long" data-min="520">Photosynthesis happens in two linked stages inside chloroplasts. In the light-dependent stage, chlorophyll absorbs sunlight and splits water, releasing oxygen and storing energy in ATP and NADPH. In the Calvin cycle that follows, that stored energy is used to fix carbon dioxide into glucose. The plant uses the sugar to grow, or stores it as starch. Almost every food chain begins here, and it is also why plants are vital to the oxygen in our air.</p>
+<template data-name="Deep Dive" data-min="520">
+<p>🌿 <strong>Deep Dive (Lazy Template):</strong> Photosynthesis operates across two linked stages inside chloroplasts. The light-dependent reactions split water molecules, generating ATP and NADPH while releasing vital oxygen. In the stroma, the Calvin cycle fixes carbon dioxide into sugar. This template was mounted only when the container reached 520px.</p>
+</template>
 </adaptive-content>
 </div>
 </div>
@@ -62,6 +81,9 @@ pre{background:var(--card);border:1px solid var(--line);border-radius:6px;paddin
   &lt;p data-min="0"&gt;Plants turn light into food.&lt;/p&gt;
   &lt;p data-min="240"&gt;Short version…&lt;/p&gt;
   &lt;p data-min="360"&gt;Medium version…&lt;/p&gt;
+  &lt;template data-min="520"&gt;
+    &lt;p&gt;Full explanation lazily rendered…&lt;/p&gt;
+  &lt;/template&gt;
 &lt;/adaptive-content&gt;</pre>
 </section>
 </main>
@@ -70,26 +92,65 @@ import "../index.js";
 // ---- demo wiring ----
 const ac = document.getElementById('ac'), cards = document.getElementById('cards');
 const cardEls = {};
+
 [...ac.children].forEach(p => {
+  const isTemplate = p.tagName === 'TEMPLATE';
+  const text = isTemplate ? p.content.textContent.trim() : p.textContent.trim();
   const d = document.createElement('div');
   d.className = 'card';
-  d.innerHTML = '<div class="tag"><span></span><span></span></div><p></p>';
-  d.children[0].children[0].textContent = p.dataset.name;
-  d.children[0].children[1].textContent = 'data-min=' + p.dataset.min + ' · ' + p.textContent.split(' ').length + ' words';
-  d.children[1].textContent = p.textContent;
+  d.innerHTML = '<div class="tag"><span></span><span class="sub"></span></div><p></p>';
+  d.children[0].children[0].textContent = p.dataset.name + (isTemplate ? ' (template)' : '');
+  
+  const minText = 'data-min=' + (p.dataset.min || '0') + ' · ' + text.split(/\s+/).length + ' words';
+  d.children[0].children[1].innerHTML = isTemplate 
+    ? `<span class="badge" id="badge-${p.dataset.name}">Lazy (Unrendered)</span> · ${minText}`
+    : minText;
+  d.children[1].textContent = text;
   cards.appendChild(d);
-  cardEls[p.dataset.name] = d;
+  cardEls[p.dataset.name] = { card: d, isTemplate };
 });
+
 ac.addEventListener('adaptive-change', e => {
-  Object.values(cardEls).forEach(c => c.classList.remove('on'));
-  if (cardEls[e.detail.variant]) cardEls[e.detail.variant].classList.add('on');
-  document.getElementById('read').textContent = 'Container is ' + e.detail.width + 'px wide, so “' + e.detail.variant + '” is shown.';
+  Object.values(cardEls).forEach(c => c.card.classList.remove('on'));
+  if (cardEls[e.detail.variant]) {
+    cardEls[e.detail.variant].card.classList.add('on');
+    if (cardEls[e.detail.variant].isTemplate) {
+      const badge = document.getElementById(`badge-${e.detail.variant}`);
+      if (badge) {
+        badge.textContent = 'Cloned to DOM!';
+        badge.style.background = 'var(--accbg)';
+        badge.style.color = 'var(--acc)';
+      }
+    }
+  }
+  const mode = ac.getAttribute('basis') === 'viewport' ? 'Viewport' : 'Container';
+  document.getElementById('read').textContent = `${mode} is ${e.detail.width}px wide, so “${e.detail.variant}” is active.`;
 });
+
 const w = document.getElementById('w');
-w.addEventListener('input', () => {
-  document.getElementById('box').style.width = w.value + 'px';
-  document.getElementById('wv').textContent = w.value + 'px';
+const setWidth = val => {
+  w.value = val;
+  document.getElementById('box').style.width = val + 'px';
+  document.getElementById('wv').textContent = val + 'px';
+  ac.update();
+};
+
+w.addEventListener('input', () => setWidth(w.value));
+
+document.querySelectorAll('.presets button').forEach(b => {
+  b.addEventListener('click', () => setWidth(b.dataset.w));
 });
+
+document.querySelectorAll('input[name="basis-toggle"]').forEach(radio => {
+  radio.addEventListener('change', e => {
+    ac.setAttribute('basis', e.target.value);
+    const isVp = e.target.value === 'viewport';
+    document.getElementById('slider-row').style.opacity = isVp ? '0.4' : '1';
+    document.getElementById('presets-row').style.opacity = isVp ? '0.4' : '1';
+    ac.update();
+  });
+});
+
 ac.update();
 </script>
 </body>

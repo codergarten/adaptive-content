@@ -1,13 +1,23 @@
 # @codergarten/adaptive-content
 
+[![npm version](https://img.shields.io/npm/v/@codergarten/adaptive-content.svg)](https://www.npmjs.com/package/@codergarten/adaptive-content)
+[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
+[![bundle size](https://img.shields.io/bundlephobia/minzip/@codergarten/adaptive-content)](https://bundlephobia.com/package/@codergarten/adaptive-content)
+[![Live Demo](https://img.shields.io/badge/demo-live-success.svg)](https://codergarten.github.io/adaptive-content/)
+
 Write several versions of the same information. Only the one that fits the space available is shown.
 
-Useful for education: a concept can be a one-liner on a phone, a paragraph on a tablet and a full explanation on a desktop, all authored in one place.
+Useful for education and editorial apps: a concept can be a one-liner on a phone, a paragraph on a tablet, and an interactive diagram on a desktop, all authored in one place.
 
-- Zero dependencies, about 60 lines, standard web component
-- Works in plain HTML, React, Vue, Svelte, Astro, etc.
-- Reacts to the **container** width (so it works in sidebars) or the **viewport**
-- `<template>` variants are rendered lazily, only when chosen
+- **Zero runtime dependencies**, ~1KB minified + gzipped, standard web component
+- Works seamlessly in plain HTML, React, Vue, Svelte, Astro, Next.js, and HTMX
+- Reacts to the **container** width (so it adapts perfectly in sidebars and cards) or the **viewport**
+- `<template>` variants are rendered **lazily**, only cloned into the DOM when selected
+- Dynamic reactivity via `MutationObserver` and `ResizeObserver`
+
+[**Explore the Interactive Demo →**](https://codergarten.github.io/adaptive-content/)
+
+---
 
 ## Install
 
@@ -19,83 +29,145 @@ npm install @codergarten/adaptive-content
 import '@codergarten/adaptive-content';
 ```
 
-Or without a build step:
+Or without a build step directly in the browser:
 
 ```html
 <script type="module" src="https://cdn.jsdelivr.net/npm/@codergarten/adaptive-content@0.1.0/index.js"></script>
 ```
 
-## Use
+---
+
+## Usage
 
 ```html
 <adaptive-content>
-  <p data-name="tiny"   data-min="0">Plants turn light into food.</p>
-  <p data-name="short"  data-min="240">Plants use sunlight, water and CO2 to make sugar.</p>
+  <p data-name="tiny" data-min="0">Plants turn light into food.</p>
+  <p data-name="short" data-min="240">Plants use sunlight, water and CO2 to make sugar.</p>
   <template data-name="long" data-min="520">
     <p>Full explanation, with diagrams, only rendered when there is room…</p>
   </template>
 </adaptive-content>
 ```
 
-`data-min` is the minimum width in px at which a variant may be shown. The component picks the variant with the largest `data-min` that fits. If the space is narrower than every variant, the smallest is shown.
+### Attributes & API
 
-| Attribute | Where | Meaning |
-|---|---|---|
-| `data-min` | each variant | minimum width (px) for that variant |
-| `data-name` | each variant (optional) | label returned in the change event |
-| `basis` | `<adaptive-content>` | `container` (default) or `viewport` |
+| Attribute | Target | Default | Meaning |
+|---|---|---|---|
+| `data-min` | Variant element | `0` | Minimum width in px required for this variant |
+| `data-max` | Variant element | `Infinity` | Optional maximum width in px for range targeting |
+| `data-name` | Variant element | `null` | Label passed in `adaptive-change` event details |
+| `basis` | `<adaptive-content>` | `container` | Measurement basis: `container` or `viewport` |
 
-The container needs a real width. It is `display: block` by default in most layouts; if you place it in a flex/grid cell, make sure the cell has a width.
+The component picks the variant that satisfies `width >= data-min` and `width <= data-max`, prioritizing the largest matching `data-min`. If the container is narrower than every variant, it safely falls back to the smallest variant.
+
+---
+
+## Range Matching (`data-min` & `data-max`)
+
+You can create bounded variants designed exclusively for specific display intervals:
+
+```html
+<adaptive-content>
+  <span data-name="mobile-pill" data-min="0" data-max="480">📱 App</span>
+  <span data-name="tablet-pill" data-min="481" data-max="768">📱 Tablet</span>
+  <span data-name="desktop-pill" data-min="769">💻 Full Dashboard</span>
+</adaptive-content>
+```
+
+---
 
 ## React
 
+A dedicated React wrapper with `forwardRef` and full TypeScript typings is included:
+
 ```jsx
+import { useRef } from 'react';
 import { AdaptiveContent } from '@codergarten/adaptive-content/react';
 
-<AdaptiveContent basis="container" onChange={d => console.log(d.variant)}>
-  <p data-name="tiny" data-min={0}>Plants turn light into food.</p>
-  <p data-name="long" data-min={400}>Full explanation…</p>
-</AdaptiveContent>
+function Header() {
+  const ref = useRef(null);
+
+  return (
+    <AdaptiveContent ref={ref} basis="container" onChange={d => console.log('Active:', d.variant)}>
+      <p data-name="tiny" data-min={0}>Plants turn light into food.</p>
+      <p data-name="long" data-min={400}>Full interactive explanation…</p>
+    </AdaptiveContent>
+  );
+}
 ```
 
-In React use normal elements as variants (not `<template>`); render conditionally inside them if you need laziness.
+*In React, use standard elements as variants; render conditionally inside them if you need lazy tree evaluation.*
 
-## Event
+---
+
+## Events & Telemetry
+
+Listen for variant changes to trigger analytics or synchronize sibling UI:
 
 ```js
-el.addEventListener('adaptive-change', e => {
-  console.log(e.detail.variant, e.detail.width);
+const ac = document.querySelector('adaptive-content');
+
+ac.addEventListener('adaptive-change', e => {
+  console.log('Variant active:', e.detail.variant); // e.g. "long"
+  console.log('Container width:', e.detail.width);   // e.g. 560
+  console.log('DOM Element:', e.detail.element);     // variant element or <template>
 });
 ```
 
-## Before JavaScript loads
+---
 
-Until the element is defined, all variants are visible. To show only the first one meanwhile:
+## SSR & Hydration (Preventing FOUC)
+
+Until custom elements initialize in SSR frameworks (Next.js, Astro, Remix, Nuxt), all variants are in the initial HTML. To keep only the first variant visible while loading:
 
 ```css
-adaptive-content:not(:defined) > :not(:first-child) { display: none; }
+/* Show only the first variant until JavaScript defines the custom element */
+adaptive-content:not(:defined) > :not(:first-child),
+adaptive-content:not(:defined) > template {
+  display: none !important;
+}
 ```
+
+---
+
+## Comparison: `<adaptive-content>` vs Pure CSS `@container`
+
+| Feature | `<adaptive-content>` | CSS `@container` |
+|---|---|---|
+| **Authoring** | Plain HTML / Markdown / CMS friendly | Requires writing custom CSS media/container queries |
+| **Lazy Evaluation** | ✅ Clones `<template>` elements only when space exists | ❌ Entire DOM subtree is rendered and evaluated |
+| **Events / Analytics** | ✅ Emits `adaptive-change` events for telemetry | ❌ No native resize or active-rule JavaScript event |
+| **Setup** | Zero CSS required; works out of the box | Requires setting `container-type: inline-size` on parent |
+
+---
 
 ## TypeScript
 
-Types are included (`AdaptiveContent`, `AdaptiveChangeDetail`, and the `HTMLElementTagNameMap` entry).
+TypeScript declarations are bundled for both the web component and React wrapper:
 
-## Notes
-
-- Hidden variants stay in the DOM (except unrendered `<template>`s), so search engines and screen readers may still see them. Use `<template>` for large or media-heavy variants.
-- A pure-CSS alternative is `container-type: inline-size` with `@container (min-width: …)` rules toggling `display`. This package is for when you want events, lazy rendering or authoring that isn't tied to CSS.
-
-## Publish (maintainers)
-
-```bash
-npm pack --dry-run   # check contents
-npm publish          # scope is @codergarten, so you need the npm org "codergarten"
+```ts
+import type { AdaptiveContent, AdaptiveChangeDetail } from '@codergarten/adaptive-content';
+import type { AdaptiveContentProps } from '@codergarten/adaptive-content/react';
 ```
 
-## Demo
+---
 
-Live demo: https://codergarten.github.io/adaptive-content/ (deployed by the GitHub Pages workflow in `.github/workflows/pages.yml`).
+## Development & Testing
+
+Run unit tests via Node's native test runner:
+
+```bash
+npm test
+```
+
+Dry-run package contents:
+
+```bash
+npm pack --dry-run
+```
+
+---
 
 ## License
 
-MIT, Codergarten
+MIT © [Codergarten](https://github.com/codergarten)
